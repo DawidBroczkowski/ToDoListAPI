@@ -1,0 +1,32 @@
+[
+  {
+    "Id": "1aee8414-056e-4730-8753-b27af33b6cc2",
+    "Name": "Sample name",
+    "Description": "Sample description",
+    "Status": 1,
+    "CreatedDate": "2022-08-29T10:49:51.962722+02:00",
+    "StartedDate": "2022-08-29T10:50:51.962722+02:00",
+    "UpdatedDate": null,
+    "CompletedDate": null
+  },
+  {
+    "Id": "a82fe490-46fd-4b3c-b8a0-b26bfced917f",
+    "Name": "Sample name",
+    "Description": "Sample description",
+    "Status": 2,
+    "CreatedDate": "2022-08-29T10:49:51.9627235+02:00",
+    "StartedDate": "2022-08-29T10:50:51.9627235+02:00",
+    "UpdatedDate": null,
+    "CompletedDate": "2022-08-29T10:51:51.9627235+02:00"
+  },
+  {
+    "Id": "37be3c8e-b3fa-4f7a-bc90-16ba246bc1af",
+    "Name": "Sample task created",
+    "Description": "sample desc created",
+    "Status": 2,
+    "CreatedDate": "2022-08-29T11:34:14.2326191Z",
+    "StartedDate": "2022-08-29T11:46:09.3575814Z",
+    "UpdatedDate": null,
+    "CompletedDate": "2022-08-29T11:46:20.5563539Z"
+  }
+]
