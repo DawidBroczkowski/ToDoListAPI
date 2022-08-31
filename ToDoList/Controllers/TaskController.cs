@@ -1,7 +1,11 @@
 ﻿using DataAccessLibrary;
 using DataAccessLibrary.Dtos;
 using DataAccessLibrary.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Security.Claims;
 
 namespace ToDoList.Controllers
 {
@@ -9,24 +13,34 @@ namespace ToDoList.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private ITaskRepository _taskRepository;
+        private DataAccessLibrary.Models.User _currentUser;
+        private IUserRepository _userRepository;
 
-        public TaskController(ITaskRepository taskRepository)
-        {
-            _taskRepository = taskRepository;
+        public TaskController(IUserRepository userRepository)
+        { 
+            _userRepository = userRepository;
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IEnumerable<FullTaskDto>> GetTasksAsync()
         {
-            var tasks = _taskRepository.GetTasks().Select(t => t.AsDto());
-            return tasks;
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            var tasks = _currentUser.TaskManager.GetTasks();
+            if (tasks is not null)
+            {
+                var result = tasks.Select(t => t.AsDto());
+                return result;
+            }
+            return null;
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<FullTaskDto>> GetTaskAsync(Guid id)
         {
-            var task = _taskRepository.GetTask(id);
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            var task = _currentUser.TaskManager.GetTask(id);
 
             if (task is null)
             {
@@ -36,142 +50,92 @@ namespace ToDoList.Controllers
             return task.AsDto();
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult> CreateTaskAsync(CreateNewTaskDto taskDto)
         {
-            await _taskRepository.CreateNewTaskAsync(taskDto.Name, taskDto.Description);
-            return NoContent();
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            _currentUser.TaskManager.CreateNewTask(taskDto.Name, taskDto.Description);
+            await _userRepository.SaveListAsync();
+            return Ok();
         }
 
+        [Authorize]
         [HttpPut("Start/{id}")]
         public async Task<ActionResult> StartTaskAsync(Guid id)
         {
-            if (!await _taskRepository.TryStartTaskAsync(id))
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            if (_currentUser.TaskManager.TryStartTask(id) is false)
             {
                 return NotFound();
             }
-            return NoContent();
+            await _userRepository.SaveListAsync();
+            return Ok();
         }
 
+        [Authorize]
         [HttpPut("Complete/{id}")]
         public async Task<ActionResult> CompleteTaskAsync(Guid id)
         {
-            if (!await _taskRepository.TryCompleteTaskAsync(id))
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            if (_currentUser.TaskManager.TryCompleteTask(id) is false)
             {
                 return NotFound();
             }
-            return NoContent();
+            await _userRepository.SaveListAsync();
+            return Ok();
         }
 
-        [HttpPut("Update")]
-        public async Task<ActionResult> UpdateTaskAsync(TaskDto taskDto)
+        [Authorize]
+        [HttpPut("Update/Name")]
+        public async Task<ActionResult> UpdateTaskNameAsync(UpdateTaskNameDto taskDto)
         {
-            bool found = false;
-
-            if (taskDto.Name is not null)
-            {
-                found = await _taskRepository.TryUpdateTaskNameAsync(taskDto.Id, taskDto.Name);
-            }
-            if (taskDto.Description is not null)
-            {
-                found = await _taskRepository.TryUpdateTaskDescriptionAsync(taskDto.Id, taskDto.Description);
-            }
-            if (found is false)
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            if (_currentUser.TaskManager.TryUpdateTaskName(taskDto.Id, taskDto.Name) is false)
             {
                 return NotFound();
             }
-            return NoContent();
+            await _userRepository.SaveListAsync();
+            return Ok();
         }
 
+        [Authorize]
+        [HttpPut("Update/Description")]
+        public async Task<ActionResult> UpdateTaskNameAsync(UpdateTaskDescriptionDto taskDto)
+        {
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            if (_currentUser.TaskManager.TryUpdateTaskDescription(taskDto.Id, taskDto.Description) is false)
+            {
+                return NotFound();
+            }
+            await _userRepository.SaveListAsync();
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPut("Update/Status")]
+        public async Task<ActionResult> UpdateTaskStatusAsync(UpdateTaskStatusDto taskDto)
+        {
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            if (_currentUser.TaskManager.TryUpdateTaskStatus(taskDto.Id, taskDto.Status) is false)
+            {
+                return NotFound();
+            }
+            await _userRepository.SaveListAsync();
+            return Ok();
+        }
+
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteTaskAsync(Guid id)
         {
-            if (!await _taskRepository.TryDeleteTaskAsync(id))
+            _currentUser = _userRepository.GetUser(User.FindFirstValue(ClaimTypes.Name));
+            if (!_currentUser.TaskManager.TryDeleteTask(id))
             {
                 return NotFound();
             }
-            return NoContent();
+            await _userRepository.SaveListAsync();
+            return Ok();
         }
-
-
-
-        //private readonly IOrderRepository repository;
-
-        //public OrderController(IOrderRepository repository)
-        //{
-        //    this.repository = repository;
-        //}
-
-        //// GET /Order/
-        //[HttpGet]
-        //public async Task<IEnumerable<OrderDto>> GetOrdersAsync()
-        //{
-        //    var order = (await repository.GetOrdersAsync())
-        //                .Select(order => order.AsDto());
-
-        //    return order;
-        //}
-
-        //// GET /Order/name
-        //[HttpGet("{name}")]
-        //public async Task<ActionResult<OrderDto>> GetOrderAsync(string name)
-        //{
-        //    var order = await repository.GetOrderAsync(name);
-
-        //    if (order is null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return order.AsDto();
-        //}
-
-        //// PUT /Order/
-        //[HttpPut("{id}")]
-        //public async Task<ActionResult> CompleteOrderAsync(CompleteOrderDto orderDto)
-        //{
-        //    await repository.CompleteOrderAsync(orderDto.Id);
-        //    return NoContent();
-        //}
-
-        //// Post /Order/
-        //[HttpPost]
-        //public async Task<ActionResult> CreateOrderAsync(CreateOrderDto orderDto)
-        //{
-        //    Order order = new()
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        Name = orderDto.Name,
-        //        Instruction = orderDto.Instruction,
-        //        IsCompleted = false
-        //    };
-
-        //    await repository.CreateOrderAsync(order);
-        //    return NoContent();
-        //}
-
-        //// Delete /Order/
-        //[HttpDelete]
-        //public async Task<ActionResult> DeleteAllOrdersAsync()
-        //{
-        //    await repository.DeleteAllOrdersAsync();
-        //    return NoContent();
-        //}
-
-        //// Delete /Order/{id}
-        //[HttpDelete("{id}")]
-        //public async Task<ActionResult> DeleteOrderAsync(Guid id)
-        //{
-        //    var existingItem = await repository.GetOrderAsync(id);
-
-        //    if (existingItem is null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    await repository.DeleteOrderAsync(id);
-
-        //    return NoContent();
-        //}
     }
 }

@@ -2,15 +2,15 @@
 
 namespace DataAccessLibrary.Models
 {
-    public record TaskModel
+    public record Task
     {
-        public TaskModel()
+        public Task()
         {
             CreatedDate = DateTime.UtcNow;
             Id = Guid.NewGuid();
         }
 
-        public TaskModel(Guid id, string name, string? description, Status status, DateTime createdDate, DateTime? updatedDate, DateTime? startedDate, DateTime? completedDate)
+        public Task(Guid id, string name, string? description, Status status, DateTime createdDate, DateTime? updatedDate, DateTime? startedDate, DateTime? completedDate)
         {
             Id = id;
             Name = name;

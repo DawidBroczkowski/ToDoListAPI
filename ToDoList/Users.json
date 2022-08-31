@@ -1,0 +1,43 @@
+[
+  {
+    "Username": "admin",
+    "PasswordHash": "uUQFV+grsTVMuua8/wRzg4MCCZdDHjnsGDN9frZOadkDwat0AhWt7fk5r+Yhcr+TJjzCE4Z36eifTtj56txCvg==",
+    "PasswordSalt": "oukhMmBtp2TNFwVDA/Xih36BRS6CGzeFKVESmf4ttqd6B9r5DxCy/5AdOO+wwC8xqnaM4VdekPhUW8If/rcqDTBpvV8zz4+8e/YYvL5AfZo/IemUEMOuXU8fx8TJXjVLnRI99H0wBRTjpEEhEt9Z5Ui4cI4jcNj/0AoqCHeiFyE=",
+    "TodoList": [
+      {
+        "Id": "692acd4b-b7e2-4fde-8f74-2fd16ee725d8",
+        "Name": "string",
+        "Description": "string",
+        "Status": 1,
+        "CreatedDate": "2022-08-31T10:05:34.9556945Z",
+        "StartedDate": "2022-08-31T10:58:58.2733522Z",
+        "UpdatedDate": "2022-08-31T11:28:07.1353302Z",
+        "CompletedDate": null
+      }
+    ]
+  },
+  {
+    "Username": "string",
+    "PasswordHash": "8g6I8puMxEoBqKahHBHCZIF/ROfLDTEa4PDViONSpl7x9SehtYZG/DCmbM+bfonFkugSUFnEHsw7OoyqIuaxyQ==",
+    "PasswordSalt": "3WOi/8p1Agk5Y0oa1dpW72hv+80BZcdSKF57o8LgG7swNjeiwh3N+cgQc85gNc4VnqY+Nar/n6UtlPKPMJAx3JJyPwL1ZY655dkiVV5Ec6+L5NVdYpMBWijKPYtX/ED9e7qNEdPtu+gv8Wn30PGrtx0aPXgbko+o4kXrDztqaAc=",
+    "TodoList": [
+      {
+        "Id": "089febf7-f4f1-43dd-a9f6-10c3f3427c80",
+        "Name": "string",
+        "Description": "string",
+        "Status": 0,
+        "CreatedDate": "2022-08-31T11:35:23.2419798Z",
+        "StartedDate": null,
+        "UpdatedDate": null,
+        "CompletedDate": null
+      }
+    ]
+  },
+  {
+    "Username": "string1",
+    "PasswordHash": "rYBK/+nEt0pbPtfT8uvDBsMFvunU5Ge3VTpZ45pym1Jpo7Inc0ZxgDFIGmcPE8GVJG7/WrA+SnWrh//N3NXkBA==",
+    "PasswordSalt": "YBHKcI2IbYMb264ylFJdizNyl7QajgELDw299Z45m2QOPWkbLM3Th/9rbuyieWMY0ka/9E3zkJVUqMXRA11Zivz5SFBUaD6W8OAskkFPBfoyeXlV2HxyacktJ1+NwcvnVGRZux0/l9hn8TFvBGxGq0qXKdrio5gir5LY9nhwv1Y=",
+    "TodoList": [
+    ]
+  }
+]

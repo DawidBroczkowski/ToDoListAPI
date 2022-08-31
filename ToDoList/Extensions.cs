@@ -5,7 +5,7 @@ namespace ToDoList
 {
     public static class Extensions
     {
-       public static FullTaskDto AsDto(this TaskModel task)
+       public static FullTaskDto AsDto(this DataAccessLibrary.Models.Task task)
        {
             return new FullTaskDto()
             {
