@@ -1,4 +1,5 @@
 ﻿using DataAccessLibrary.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataAccessLibrary.Models
 {
@@ -7,7 +8,6 @@ namespace DataAccessLibrary.Models
         public Task()
         {
             CreatedDate = DateTime.UtcNow;
-            Id = Guid.NewGuid();
         }
 
         public Task(Guid id, string name, string? description, Status status, DateTime createdDate, DateTime? updatedDate, DateTime? startedDate, DateTime? completedDate)
@@ -22,10 +22,15 @@ namespace DataAccessLibrary.Models
             CompletedDate = completedDate;
         }
 
-        public Guid Id { get; init; }
-        public string? Name { get; set; }
+        public Guid Id { get; set; }
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; }
+        [MaxLength(500)]
         public string? Description { get; set; }
+        [Required]
         public Status Status { get; set; }
+        [Required]
         public DateTime CreatedDate { get; init; }
         public DateTime? StartedDate { get; set; } = null;
         public DateTime? UpdatedDate { get; set; } = null;

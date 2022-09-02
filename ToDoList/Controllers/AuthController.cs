@@ -1,4 +1,4 @@
-﻿using DataAccessLibrary;
+﻿using DataAccessLibrary.DataAccess;
 using DataAccessLibrary.Dtos;
 using DataAccessLibrary.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -19,10 +19,11 @@ namespace ToDoList.Controllers
         private readonly IUserRepository _userRepository;
         private readonly AuthorizationManager _authorizationManager;
 
-        public AuthController(IConfiguration configuration, IUserRepository userRepository)
+        public AuthController(IConfiguration configuration, IUserRepository userRepository, UsersContext db)
         {
             _configuration = configuration;
             _userRepository = userRepository;
+            _userRepository.SetContext(db);
             _authorizationManager = new(_configuration);
         }
 
@@ -30,9 +31,17 @@ namespace ToDoList.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto userDto)
         {
-            if (_userRepository.GetUser(userDto.Username) is not null)
+            if (_userRepository.GetUserAsync(userDto.Username) is not null)
             {
                 return ValidationProblem("Username is taken");
+            }
+            if (userDto.Password.Length < 6 || userDto.Password.Length > 30)
+            {
+                return ValidationProblem("Password must be between 6-30 characters long");
+            }
+            if (userDto.Username.Length < 4 || userDto.Username.Length > 20)
+            {
+                return ValidationProblem("Password must be between 4-20 characters long");
             }
 
             _authorizationManager.CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -44,7 +53,7 @@ namespace ToDoList.Controllers
                 PasswordSalt = passwordSalt
             };
 
-            _userRepository.CreateNewUser(user);
+            await _userRepository.CreateNewUserAsync(user);
             await _userRepository.SaveListAsync();
             
             return Ok();
@@ -54,7 +63,7 @@ namespace ToDoList.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto userDto)
         {
-            var user = _userRepository.GetUser(userDto.Username);
+            var user = await _userRepository.GetUserAsync(userDto.Username);
 
             if (user is null)
             {

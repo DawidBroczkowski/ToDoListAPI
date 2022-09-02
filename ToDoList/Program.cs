@@ -1,6 +1,10 @@
-using DataAccessLibrary;
+using DataAccessLibrary.DataAccess;
+using DataAccessLibrary.DataAccess.DbData;
+using DataAccessLibrary.DataAccess.JsonData;
+using DataAccessLibrary.JsonData;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +30,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddSingleton<IUserRepository, JsonUserRepository>();
+builder.Services.AddDbContext<UsersContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+}, contextLifetime: ServiceLifetime.Singleton);
+builder.Services.AddScoped<IUserRepository, DbUserRepository>();
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 ﻿using DataAccessLibrary.Enums;
 
-namespace DataAccessLibrary
+namespace DataAccessLibrary.JsonData
 {
     public interface ITaskManager
     {
