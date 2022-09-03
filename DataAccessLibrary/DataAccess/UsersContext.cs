@@ -13,5 +13,6 @@ namespace DataAccessLibrary.DataAccess
         public UsersContext(DbContextOptions options) : base(options) { }
         public DbSet<Models.User> Users { get; set; }
         public DbSet<Models.Task> Tasks { get; set; }
+        public DbSet<Models.TodoList> TodoLists { get; set; }
     }
 }

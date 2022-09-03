@@ -1,5 +1,5 @@
 ﻿using DataAccessLibrary.DataAccess;
-using DataAccessLibrary.Dtos;
+using ToDoList.Dtos;
 using DataAccessLibrary.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,19 +31,6 @@ namespace ToDoList.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto userDto)
         {
-            if (_userRepository.GetUserAsync(userDto.Username) is not null)
-            {
-                return ValidationProblem("Username is taken");
-            }
-            if (userDto.Password.Length < 6 || userDto.Password.Length > 30)
-            {
-                return ValidationProblem("Password must be between 6-30 characters long");
-            }
-            if (userDto.Username.Length < 4 || userDto.Username.Length > 20)
-            {
-                return ValidationProblem("Password must be between 4-20 characters long");
-            }
-
             _authorizationManager.CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             User user = new()
@@ -53,9 +40,12 @@ namespace ToDoList.Controllers
                 PasswordSalt = passwordSalt
             };
 
-            await _userRepository.CreateNewUserAsync(user);
+            if (await _userRepository.TryCreateNewUserAsync(user) is false)
+            {
+                return BadRequest("Username already taken");
+            }
+
             await _userRepository.SaveListAsync();
-            
             return Ok();
         }
 

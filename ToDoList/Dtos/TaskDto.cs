@@ -5,12 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccessLibrary.Dtos
+namespace ToDoList.Dtos
 {
-    public record CreateNewTaskDto
+    public record TaskDto
     {
         [Required]
-        public string Name { get; set; }
+        public Guid Id { get; init; }
+        [MaxLength(100)]
+        public string? Name { get; set; }
+        [MaxLength(500)]
         public string? Description { get; set; }
     }
 }

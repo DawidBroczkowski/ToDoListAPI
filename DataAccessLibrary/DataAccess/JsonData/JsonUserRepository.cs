@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DataAccessLibrary.DataAccess.JsonData
 {
+    /// <summary>
+    /// Not sure if this works anymore. Needs testing.
+    /// </summary>
+
     public class JsonUserRepository : IUserRepository
     {
         private List<Models.User> _users;
@@ -24,7 +29,7 @@ namespace DataAccessLibrary.DataAccess.JsonData
         /// <returns>User with given username.</returns>
         public async Task<Models.User> GetUserAsync(string username)
         {
-            var user = _users.Find(x => x.Username == username);
+            var user = _users.FirstOrDefault(x => x.Username == username);
             return user;
         }
 
@@ -33,10 +38,15 @@ namespace DataAccessLibrary.DataAccess.JsonData
         /// </summary>
         /// <param name="user">User being added to the list.</param>
         /// <returns></returns>
-        public async Task CreateNewUserAsync(Models.User user)
+        public async Task<bool> TryCreateNewUserAsync(Models.User user)
         {
+            if (_users.FirstOrDefault(x => x.Username == user.Username) is not null)
+            {
+                return false;
+            }
             _users.Add(user);
             await SaveListAsync();
+            return true;
         }
 
         /// <summary>
@@ -44,6 +54,14 @@ namespace DataAccessLibrary.DataAccess.JsonData
         /// </summary>
         public async Task SaveListAsync()
         {
+            foreach (var user in _users)
+            {
+                if (user.TodoLists.Last().Id == Guid.Empty)
+                {
+                    user.TodoLists.Last().Id = Guid.NewGuid();
+                }
+            }
+
             using FileStream stream = File.Create("Users.json");
             await JsonSerializer.SerializeAsync(stream, _users);
             await stream.DisposeAsync();
@@ -56,9 +74,9 @@ namespace DataAccessLibrary.DataAccess.JsonData
         /// <returns></returns>
         public async Task UpdateUserAsync(Models.User updatedUser)
         {
-            if(updatedUser.TodoList.Last().Id == Guid.Empty)
+            if(updatedUser.TodoLists.Last().Id == Guid.Empty)
             {
-                updatedUser.TodoList.Last().Id = Guid.NewGuid();
+                updatedUser.TodoLists.Last().Id = Guid.NewGuid();
             }
             return;
         }
@@ -93,9 +111,9 @@ namespace DataAccessLibrary.DataAccess.JsonData
 
             foreach (var user in _users)
             {
-                if (user.TodoList is null)
+                if (user.TodoLists is null)
                 {
-                    user.TodoList = new();
+                    user.TodoLists = new();
                 }
             }
         }

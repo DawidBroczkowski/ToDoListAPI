@@ -1,23 +1,34 @@
-﻿using DataAccessLibrary.Dtos;
-using DataAccessLibrary.Models;
+﻿using DataAccessLibrary.Models;
+using ToDoList.Dtos;
 
 namespace ToDoList
 {
     public static class Extensions
     {
-       public static FullTaskDto AsDto(this DataAccessLibrary.Models.Task task)
-       {
-            return new FullTaskDto()
+        public static FullTaskDto AsDto(this DataAccessLibrary.Models.Task? task)
+        {
+             return new FullTaskDto()
+             {
+                 Id = task.Id,
+                 Name = task.Name,
+                 Description = task.Description,
+                 Status = task.Status,
+                 CreatedDate = task.CreatedDate,
+                 StartedDate = task.StartedDate,
+                 UpdatedDate = task.UpdatedDate,
+                 CompletedDate = task.CompletedDate
+             };
+        }
+
+        public static TodoListDto AsDto(this TodoList? todoList)
+        {
+            return new TodoListDto()
             {
-                Id = task.Id,
-                Name = task.Name,
-                Description = task.Description,
-                Status = task.Status,
-                CreatedDate = task.CreatedDate,
-                StartedDate = task.StartedDate,
-                UpdatedDate = task.UpdatedDate,
-                CompletedDate = task.CompletedDate
+                Id = todoList.Id,
+                Name = todoList.Name,
+                Description = todoList.Description,
+                TaskList = todoList.TaskList
             };
-       }
+        }
     }
 }

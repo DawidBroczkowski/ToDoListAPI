@@ -26,9 +26,16 @@ namespace DataAccessLibrary.DataAccess.DbData
         /// </summary>
         /// <param name="user">User being added to the database.</param>
         /// <returns></returns>
-        public async Task CreateNewUserAsync(Models.User user)
+        public async Task<bool> TryCreateNewUserAsync(Models.User user)
         {
-            await _db.Users.AddAsync(user);
+            if(_db.Users.FirstOrDefault(x => x.Username == user.Username) is not null)
+            {
+                return false;
+            }
+
+            _db.Users.Add(user);
+            _db.SaveChanges();
+            return true;
         }
 
         /// <summary>
@@ -38,7 +45,7 @@ namespace DataAccessLibrary.DataAccess.DbData
         /// <returns>User with given username.</returns>
         public async Task<Models.User> GetUserAsync(string username)
         {
-            var user = await _db.Users.Include(t => t.TodoList).FirstOrDefaultAsync(u => u.Username == username);
+            var user = await _db.Users.Include(t => t.TodoLists).FirstOrDefaultAsync(u => u.Username == username);
             return user;
         }
 
@@ -85,9 +92,9 @@ namespace DataAccessLibrary.DataAccess.DbData
 
             foreach (var user in users)
             {
-                if (user.TodoList is null)
+                if (user.TodoLists is null)
                 {
-                    user.TodoList = new();
+                    user.TodoLists = new();
                 }
             }
 

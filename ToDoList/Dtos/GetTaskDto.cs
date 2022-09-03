@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccessLibrary.Dtos
+namespace ToDoList.Dtos
 {
-    public record TaskDto
+    public record GetTaskDto
     {
         [Required]
-        public Guid Id { get; init; }
-        public string? Name { get; set; }
-        public string? Description { get; set; }
+        public Guid ListId { get; set; }
+        [Required]
+        public Guid TaskId { get; set; }
     }
 }

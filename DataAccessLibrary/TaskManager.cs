@@ -1,8 +1,9 @@
 ﻿using DataAccessLibrary.Enums;
-using DataAccessLibrary.JsonData;
+using DataAccessLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -18,13 +19,30 @@ namespace DataAccessLibrary
             _user = user;
         }
 
+        public void CreateNewTodoList(string name, string? description)
+        {
+            TodoList todoList = new()
+            {
+                Name = name,
+                Description = description,
+                TaskList = new()
+            };
+            _user.TodoLists.Add(todoList);
+        }
+
         /// <summary>
         /// Creates a new task and adds it to the users Todo list.
         /// </summary>
         /// <param name="name">Name of the task.</param>
         /// <param name="description">Description of the task.</param>
-        public void CreateNewTask(string name, string? description)
+        public bool TryCreateNewTask(Guid listId, string name, string? description)
         {
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
             Models.Task task = new()
             {
                 Name = name,
@@ -32,7 +50,8 @@ namespace DataAccessLibrary
                 Status = Status.New
             };
 
-            _user.TodoList.Add(task);
+            todoList.TaskList.Add(task);
+            return true;
         }
 
         /// <summary>
@@ -40,9 +59,9 @@ namespace DataAccessLibrary
         /// </summary>
         /// <param name="id">Guid of the task.</param>
         /// <returns>True if the task is found, false if not.</returns>
-        public bool TryStartTask(Guid id)
+        public bool TryStartTask(Guid listId, Guid id)
         {
-            return TryUpdateTaskStatus(id, Status.Current);
+            return TryUpdateTaskStatus(listId, id, Status.Current);
         }
 
         /// <summary>
@@ -50,9 +69,21 @@ namespace DataAccessLibrary
         /// </summary>
         /// <param name="id">Guid of the task.</param>
         /// <returns>True if the task is found, false if not.</returns>
-        public bool TryCompleteTask(Guid id)
+        public bool TryCompleteTask(Guid listId, Guid id)
         {
-            return TryUpdateTaskStatus(id, Status.Completed);
+            return TryUpdateTaskStatus(listId, id, Status.Completed);
+        }
+
+        public bool TryDeleteAllTasks(Guid listId)
+        {
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
+            todoList.TaskList.Clear();
+            return true;
         }
 
         /// <summary>
@@ -60,16 +91,33 @@ namespace DataAccessLibrary
         /// </summary>
         /// <param name="id">Guid of the task.</param>
         /// <returns>True if the task is found, false if not.</returns>
-        public bool TryDeleteTask(Guid id)
+        public bool TryDeleteTask(Guid listId, Guid id)
         {
-            var task = _user.TodoList.Find(t => t.Id == id);
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
+            var task = todoList.TaskList.FirstOrDefault(t => t.Id == id);
             if (task is null)
             {
                 return false;
             }
 
-            _user.TodoList.Remove(task);
+            todoList.TaskList.Remove(task);
             return true;
+        }
+
+        public bool TryDeleteList(Guid listId)
+        {
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
+            return _user.TodoLists.Remove(todoList);
         }
 
         /// <summary>
@@ -78,9 +126,15 @@ namespace DataAccessLibrary
         /// <param name="id">Guid of the task.</param>
         /// <param name="name">Updated task name.</param>
         /// <returns>True if the task is found, false if not.</returns>
-        public bool TryUpdateTaskName(Guid id, string name)
+        public bool TryUpdateTaskName(Guid listId, Guid id, string name)
         {
-            var task = _user.TodoList.Find(t => t.Id == id);
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
+            var task = todoList.TaskList.FirstOrDefault(t => t.Id == id);
             if (task is null)
             {
                 return false;
@@ -97,9 +151,15 @@ namespace DataAccessLibrary
         /// <param name="id">Guid of the task.</param>
         /// <param name="descripiton">Updated task description.</param>
         /// <returns>True if the task is found, false if not.</returns>
-        public bool TryUpdateTaskDescription(Guid id, string descripiton)
+        public bool TryUpdateTaskDescription(Guid listId, Guid id, string descripiton)
         {
-            var task = _user.TodoList.Find(t => t.Id == id);
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
+            var task = todoList.TaskList.FirstOrDefault(t => t.Id == id);
             if (task is null)
             {
                 return false;
@@ -116,9 +176,15 @@ namespace DataAccessLibrary
         /// <param name="id">Guid of the task.</param>
         /// <param name="status">Updated task status.</param>
         /// <returns>True if the task is found, false if not.</returns>
-        public bool TryUpdateTaskStatus(Guid id, Status status)
+        public bool TryUpdateTaskStatus(Guid listId, Guid id, Status status)
         {
-            var task = _user.TodoList.Find(t => t.Id == id);
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return false;
+            }
+
+            var task = todoList.TaskList.FirstOrDefault(t => t.Id == id);
             if (task is null)
             {
                 return false;
@@ -163,9 +229,14 @@ namespace DataAccessLibrary
         /// Gets all tasks from the user.
         /// </summary>
         /// <returns>User's TodoList.</returns>
-        public List<Models.Task> GetTasks()
+        public List<Models.Task>? GetTasks(Guid listId)
         {
-            return _user.TodoList;
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return null;
+            }
+            return todoList.TaskList;
         }
 
         /// <summary>
@@ -173,9 +244,24 @@ namespace DataAccessLibrary
         /// </summary>
         /// <param name="id">Guid of the task.</param>
         /// <returns></returns>
-        public Models.Task GetTask(Guid id)
+        public Models.Task? GetTask(Guid listId, Guid id)
         {
-            return _user.TodoList.Find(t => t.Id == id);
+            var todoList = _user.TodoLists.FirstOrDefault(x => x.Id == listId);
+            if (todoList is null)
+            {
+                return null;
+            }
+            return todoList.TaskList.FirstOrDefault(t => t.Id == id);
+        }
+
+        public List<TodoList>? GetTodoLists()
+        {
+            return _user.TodoLists;
+        }
+
+        public TodoList? GetTodoList(Guid listId)
+        {
+            return _user.TodoLists.FirstOrDefault(x => x.Id == listId);
         }
     }
 }

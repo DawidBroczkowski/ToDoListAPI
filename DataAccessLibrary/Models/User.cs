@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using DataAccessLibrary.DataAccess;
 using DataAccessLibrary;
-using DataAccessLibrary.JsonData;
 
 namespace DataAccessLibrary.Models
 {
@@ -29,9 +28,7 @@ namespace DataAccessLibrary.Models
         [Required]
         [MaxLength(256)]
         public byte[] PasswordSalt { get; set; }
-        [Required]
-        [MaxLength(30)]
-        public List<Task> TodoList { get; set; }
+        public List<TodoList>? TodoLists { get; set; }
         [JsonIgnore]
         [NotMapped]
         public ITaskManager TaskManager { get; set; }

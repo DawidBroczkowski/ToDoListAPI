@@ -1,7 +1,6 @@
 using DataAccessLibrary.DataAccess;
 using DataAccessLibrary.DataAccess.DbData;
 using DataAccessLibrary.DataAccess.JsonData;
-using DataAccessLibrary.JsonData;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
