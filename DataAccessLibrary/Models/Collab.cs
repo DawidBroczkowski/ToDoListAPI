@@ -5,16 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ToDoList.Dtos
+namespace DataAccessLibrary.Models
 {
-    public record UpdateTaskDescriptionDto
+    public record Collab
     {
+        [Key]
         [Required]
-        public Guid? ListId { get; set; }
+        public Guid CollabId { get; set; }
         [Required]
-        public Guid? TaskId { get; init; }
+        public virtual Models.User User { get; set; }
         [Required]
-        [MaxLength(500)]
-        public string Description { get; set; }
+        public virtual Models.TodoList TodoList { get; set; }
     }
 }

@@ -16,4 +16,14 @@ namespace DataAccessLibrary.Enums
         [EnumMember(Value = "Completed")]
         Completed
     }
+
+    public enum Permission
+    {
+        [EnumMember(Value = "Owner")]
+        Owner,
+        [EnumMember(Value = "Collaborator")]
+        Collaborator,
+        [EnumMember(Value = "Denied")]
+        Denied
+    }
 }

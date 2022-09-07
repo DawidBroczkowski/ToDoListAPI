@@ -10,8 +10,8 @@ namespace ToDoList.Dtos
     public record GetTaskDto
     {
         [Required]
-        public Guid ListId { get; set; }
+        public Guid? ListId { get; set; }
         [Required]
-        public Guid TaskId { get; set; }
+        public Guid? TaskId { get; set; }
     }
 }

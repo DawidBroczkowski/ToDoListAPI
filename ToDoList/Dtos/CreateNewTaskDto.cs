@@ -10,7 +10,7 @@ namespace ToDoList.Dtos
     public record CreateNewTaskDto
     {
         [Required]
-        public Guid ListId { get; set; }
+        public Guid? ListId { get; set; }
         [Required]
         [MaxLength(100)]
         public string Name { get; set; }

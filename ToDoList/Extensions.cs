@@ -30,5 +30,16 @@ namespace ToDoList
                 TaskList = todoList.TaskList
             };
         }
+
+        public static GetInviteDto AsDto(this Invite? invite)
+        {
+            return new GetInviteDto()
+            {
+                ListId = invite.ListId,
+                InviteId = invite.InviteId,
+                InvitingUsername = invite.InvitingUsername,
+                InviteDate = invite.InviteDate
+            };
+        }
     }
 }

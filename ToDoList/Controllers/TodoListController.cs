@@ -1,5 +1,5 @@
 ﻿using DataAccessLibrary.DataAccess;
-using DataAccessLibrary.DataAccess.DbData;
+using DataAccessLibrary.Enums;
 using ToDoList.Dtos;
 using DataAccessLibrary.DataAccess.JsonData;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +9,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Collections.Generic;
 using DataAccessLibrary.Models;
+using DataAccessLibrary.DataAccess.DbData;
 
 namespace ToDoList.Controllers
 {
@@ -27,10 +28,29 @@ namespace ToDoList.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<TodoListDto>> GetTodoListsAsync()
+        public async Task<IEnumerable<TodoListDto>> GetAllTodoListsAsync()
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            var todoLists = _currentUser.TaskManager.GetTodoLists();
+            var todoLists = await _userRepository.GetUserOwnTodoListsAsync(_currentUser.Username);
+            todoLists.AddRange(await _userRepository.GetUserCollabTodoListsAsync(_currentUser.Username));
+            return todoLists.Select(t => t.AsDto());
+        }
+
+        [HttpGet("Own")]
+        [Authorize]
+        public async Task<IEnumerable<TodoListDto>> GetOwnTodoListsAsync()
+        {
+            _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
+            var todoLists = await _userRepository.GetUserOwnTodoListsAsync(_currentUser.Username);
+            return todoLists.Select(t => t.AsDto());
+        }
+
+        [HttpGet("Collabs")]
+        [Authorize]
+        public async Task<IEnumerable<TodoListDto>> GetCollabTodoListsAsync()
+        {
+            _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
+            var todoLists = await _userRepository.GetUserCollabTodoListsAsync(_currentUser.Username);
             return todoLists.Select(t => t.AsDto());
         }
 
@@ -39,10 +59,10 @@ namespace ToDoList.Controllers
         public async Task<ActionResult<TodoListDto>> GetTodoListAsync(Guid listId)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            var todoList = _currentUser.TaskManager.GetTodoList(listId);
+            var todoList = await _userRepository.GetTodoListAndTaskListAsync(_currentUser.Username, listId);
             if (todoList is null)
             {
-                return BadRequest();
+                return BadRequest("List not found.");
             }
             return Ok(todoList.AsDto());
         }
@@ -52,7 +72,7 @@ namespace ToDoList.Controllers
         public async Task<ActionResult<List<FullTaskDto>>> GetTaskAsync(Guid listId)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            var todoList = _currentUser.TaskManager.GetTodoList(listId);
+            var todoList = await _userRepository.GetTodoListAndTaskListAsync(_currentUser.Username, listId);
             if (todoList is null)
             {
                 return BadRequest("List not found.");
@@ -65,13 +85,13 @@ namespace ToDoList.Controllers
         public async Task<ActionResult<List<FullTaskDto>>> GetTaskAsync(GetTaskDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            var todoList = _currentUser.TaskManager.GetTodoList(taskDto.ListId);
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
             if (todoList is null)
             {
                 return BadRequest("List not found.");
             }
 
-            var task = todoList.TaskList.FirstOrDefault(x => x.Id == taskDto.TaskId);
+            var task = todoList.TaskList.FirstOrDefault();
             if (task is null)
             {
                 return BadRequest("Task not found.");
@@ -84,8 +104,7 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> CreateTodoListAsync(CreateNewTodoListDto todoListDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            _currentUser.TaskManager.CreateNewTodoList(todoListDto.Name, todoListDto.Description);
-            await _userRepository.UpdateUserAsync(_currentUser);
+            await _userRepository.CreateNewTodoListAsync(_currentUser.Username, todoListDto.Name, todoListDto.Description);
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -95,11 +114,14 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> CreateTaskAsync(CreateNewTaskDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryCreateNewTask(taskDto.ListId, taskDto.Name, taskDto.Description) is false)
+            var todoList = await _userRepository.GetTodoListAsync(_currentUser.Username, taskDto.ListId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+
+            todoList.TaskList = new();
+            todoList.TaskManager.CreateNewTask(taskDto.Name, taskDto.Description);
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -109,11 +131,15 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> StartTaskAsync(GetTaskDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryStartTask(taskDto.ListId, taskDto.TaskId) is false)
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            if(todoList.TaskManager.TryStartTask(taskDto.TaskId) is false)
+            {
+                return BadRequest("Task not found.");
+            }
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -123,11 +149,15 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> CompleteTaskAsync(GetTaskDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryCompleteTask(taskDto.ListId, taskDto.TaskId) is false)
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            if (todoList.TaskManager.TryCompleteTask(taskDto.TaskId) is false)
+            {
+                return BadRequest("Task not found.");
+            }
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -137,11 +167,15 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> UpdateTaskStatusAsync(UpdateTaskStatusDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryUpdateTaskStatus(taskDto.ListId, taskDto.TaskId, taskDto.Status) is false)
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            if (todoList.TaskManager.TryUpdateTaskStatus(taskDto.TaskId, taskDto.Status) is false)
+            {
+                return BadRequest("Task not found.");
+            }
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -151,11 +185,15 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> UpdateTaskNameAsync(UpdateTaskNameDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryUpdateTaskName(taskDto.ListId, taskDto.TaskId, taskDto.Name) is false)
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            if (todoList.TaskManager.TryUpdateTaskName(taskDto.TaskId, taskDto.Name) is false)
+            {
+                return BadRequest("Task not found.");
+            }
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -165,11 +203,15 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> UpdateTaskDescriptionAsync(UpdateTaskDescriptionDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryUpdateTaskDescription(taskDto.ListId, taskDto.TaskId, taskDto.Description) is false)
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            if (todoList.TaskManager.TryUpdateTaskDescription(taskDto.TaskId, taskDto.Description) is false)
+            {
+                return BadRequest("Task not found.");
+            }
             await _userRepository.SaveListAsync();
             return Ok();
         }
@@ -179,12 +221,20 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> DeleteTodoListAsync(Guid listId)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryDeleteList(listId) is false)
+            var todoList = await _userRepository.GetTodoListAsync(_currentUser.Username, listId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
-            await _userRepository.SaveListAsync();
+
+            var owner = await _userRepository.GetTodoListOwnerAsync(todoList.Id);
+            if (_currentUser.Username != owner.Username)
+            {
+                return BadRequest("You are not the owner.");
+            }
+
+            await _userRepository.RemoveTodoListAsync(todoList);
+            await _userRepository.SaveListAsync();   
             return Ok();
         }
 
@@ -193,27 +243,105 @@ namespace ToDoList.Controllers
         public async Task<ActionResult> DeleteTaskAsync(GetTaskDto taskDto)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryDeleteTask(taskDto.ListId, taskDto.TaskId) is false)
+            var todoList = await _userRepository.GetTodoListAndSingleTaskAsync(_currentUser.Username, taskDto.ListId, taskDto.TaskId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            var task = todoList.TaskList.FirstOrDefault();
+            if (task is null)
+            {
+                return BadRequest("Task not found.");
+            }
+            todoList.TaskManager.TryDeleteTask(taskDto.TaskId);
+            //_userRepository.DeleteObject(task);
             await _userRepository.SaveListAsync();
             return Ok();
         }
 
         [HttpDelete("Tasks/All/{listId}")]
         [Authorize]
-        public async Task<ActionResult> DeleteTasksAsync(Guid listId)
+        public async Task<ActionResult> DeleteAllTasksAsync(Guid listId)
         {
             _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
-            if (_currentUser.TaskManager.TryDeleteAllTasks(listId) is false)
+            var todoList = await _userRepository.GetTodoListAndTaskListAsync(_currentUser.Username, listId);
+            if (todoList is null)
             {
-                return BadRequest("Todo list or task not found.");
+                return BadRequest("List not found.");
             }
-            await _userRepository.UpdateUserAsync(_currentUser);
+            if (todoList.TaskManager.TryDeleteAllTasks() is false)
+            {
+                return BadRequest("Task not found.");
+            }
             await _userRepository.SaveListAsync();
             return Ok();
+        }
+
+        [HttpPost("Invite")]
+        [Authorize]
+        public async Task<ActionResult> InviteUserAsync(InviteDto inviteDto)
+        {
+            _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
+            var owner = await _userRepository.GetTodoListOwnerAsync(inviteDto.ListId);
+            if (owner is null)
+            {
+                return BadRequest("List not found.");
+            }
+            if (owner.Username != _currentUser.Username)
+            {
+                return BadRequest("Acces denied. You are not the list's owner.");
+            }
+
+            var collaborators = await _userRepository.GetTodoListCollaboratorsAsync(inviteDto.ListId);
+            if (collaborators.Any(x => x.Username == inviteDto.ReceivingUsername))
+            {
+                return BadRequest("User is already a collaborator");
+            }
+
+            if (await _userRepository.TryInviteToCollabAsync(_currentUser.Username, inviteDto.ReceivingUsername, inviteDto.ListId) is false)
+            {
+                return BadRequest("User not found.");
+            }
+
+            await _userRepository.SaveListAsync();
+            return Ok();
+        }
+
+        [HttpGet("Invite")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<GetInviteDto>>> GetInvitesAsync()
+        {
+            _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
+            var invites = await _userRepository.GetUserInvitesAsync(_currentUser.Username);
+            return Ok(invites.Select(x => x.AsDto()));
+        }
+
+        [HttpPut("Invite/{inviteId}")]
+        [Authorize]
+        public async Task<ActionResult> AcceptInviteAsync(Guid? inviteId)
+        {
+            _currentUser = await _userRepository.GetUserAsync(User.FindFirstValue(ClaimTypes.Name));
+            if (await _userRepository.TryAcceptInvite(_currentUser.Username, inviteId) is false)
+            {
+                return BadRequest("Invite not found.");
+            }
+            await _userRepository.SaveListAsync();
+            return Ok();
+        }
+
+        private async Task<Permission> CheckUserPermission(DataAccessLibrary.Models.User user, DataAccessLibrary.Models.TodoList todoList)
+        {
+            var owner = await _userRepository.GetTodoListOwnerAsync(todoList.Id);
+
+            if (owner.Username == _currentUser.Username)
+            {
+                return Permission.Owner;
+            }
+            if (todoList.Collaborators.Any(x => x.User.Username == _currentUser.Username))
+            {
+                return Permission.Collaborator;
+            }
+            return Permission.Denied;
         }
     }
 }

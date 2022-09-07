@@ -4,6 +4,7 @@ using DataAccessLibrary.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessLibrary.Migrations
 {
     [DbContext(typeof(UsersContext))]
-    partial class UsersContextModelSnapshot : ModelSnapshot
+    [Migration("20220905115838_RelationsAdded")]
+    partial class RelationsAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,55 +23,6 @@ namespace DataAccessLibrary.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("DataAccessLibrary.Models.Collab", b =>
-                {
-                    b.Property<Guid>("CollabId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TodoListId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CollabId");
-
-                    b.HasIndex("TodoListId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Collabs");
-                });
-
-            modelBuilder.Entity("DataAccessLibrary.Models.Invite", b =>
-                {
-                    b.Property<Guid?>("InviteId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("InviteDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InvitingUsername")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<Guid?>("ListId")
-                        .IsRequired()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("TargetUserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("InviteId");
-
-                    b.HasIndex("TargetUserId");
-
-                    b.ToTable("Invites");
-                });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Task", b =>
                 {
@@ -155,6 +108,9 @@ namespace DataAccessLibrary.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varbinary(256)");
 
+                    b.Property<Guid?>("TodoListId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -162,37 +118,9 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TodoListId");
+
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("DataAccessLibrary.Models.Collab", b =>
-                {
-                    b.HasOne("DataAccessLibrary.Models.TodoList", "TodoList")
-                        .WithMany("Collaborators")
-                        .HasForeignKey("TodoListId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLibrary.Models.User", "User")
-                        .WithMany("CollabLists")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TodoList");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DataAccessLibrary.Models.Invite", b =>
-                {
-                    b.HasOne("DataAccessLibrary.Models.User", "TargetUser")
-                        .WithMany("Invites")
-                        .HasForeignKey("TargetUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Task", b =>
@@ -209,7 +137,7 @@ namespace DataAccessLibrary.Migrations
             modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
                 {
                     b.HasOne("DataAccessLibrary.Models.User", "Owner")
-                        .WithMany("OwnedLists")
+                        .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -217,20 +145,18 @@ namespace DataAccessLibrary.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
+                {
+                    b.HasOne("DataAccessLibrary.Models.TodoList", null)
+                        .WithMany("Collaborators")
+                        .HasForeignKey("TodoListId");
+                });
+
             modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
                 {
                     b.Navigation("Collaborators");
 
                     b.Navigation("TaskList");
-                });
-
-            modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
-                {
-                    b.Navigation("CollabLists");
-
-                    b.Navigation("Invites");
-
-                    b.Navigation("OwnedLists");
                 });
 #pragma warning restore 612, 618
         }

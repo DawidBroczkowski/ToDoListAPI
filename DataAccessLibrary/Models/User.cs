@@ -13,11 +13,6 @@ namespace DataAccessLibrary.Models
 {
     public record User
     {
-        public User()
-        {
-            TaskManager = new TaskManager(this);
-        }
-
         public int Id { get; set; }
         [Required]
         [MaxLength(30)]
@@ -28,9 +23,8 @@ namespace DataAccessLibrary.Models
         [Required]
         [MaxLength(256)]
         public byte[] PasswordSalt { get; set; }
-        public List<TodoList>? TodoLists { get; set; }
-        [JsonIgnore]
-        [NotMapped]
-        public ITaskManager TaskManager { get; set; }
+        public virtual List<Models.Invite> Invites { get; set; }
+        public virtual List<Models.TodoList> OwnedLists { get; set; }
+        public virtual List<Models.Collab> CollabLists { get; set; }
     }
 }

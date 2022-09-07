@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessLibrary.Migrations
 {
     [DbContext(typeof(UsersContext))]
-    [Migration("20220901081559_FieldValueOptimization")]
-    partial class FieldValueOptimization
+    [Migration("20220905105038_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -51,17 +51,43 @@ namespace DataAccessLibrary.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("TodoListId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UserId")
+                    b.HasKey("Id");
+
+                    b.HasIndex("TodoListId");
+
+                    b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("TodoLists");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
@@ -82,6 +108,9 @@ namespace DataAccessLibrary.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varbinary(256)");
 
+                    b.Property<Guid?>("TodoListId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -89,19 +118,41 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TodoListId");
+
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Task", b =>
                 {
-                    b.HasOne("DataAccessLibrary.Models.User", null)
-                        .WithMany("TodoList")
-                        .HasForeignKey("UserId");
+                    b.HasOne("DataAccessLibrary.Models.TodoList", null)
+                        .WithMany("TaskList")
+                        .HasForeignKey("TodoListId");
+                });
+
+            modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
+                {
+                    b.HasOne("DataAccessLibrary.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
                 {
-                    b.Navigation("TodoList");
+                    b.HasOne("DataAccessLibrary.Models.TodoList", null)
+                        .WithMany("Collaborators")
+                        .HasForeignKey("TodoListId");
+                });
+
+            modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
+                {
+                    b.Navigation("Collaborators");
+
+                    b.Navigation("TaskList");
                 });
 #pragma warning restore 612, 618
         }

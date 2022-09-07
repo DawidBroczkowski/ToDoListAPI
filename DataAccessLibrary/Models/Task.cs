@@ -1,5 +1,6 @@
 ﻿using DataAccessLibrary.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace DataAccessLibrary.Models
 {
@@ -35,5 +36,7 @@ namespace DataAccessLibrary.Models
         public DateTime? StartedDate { get; set; } = null;
         public DateTime? UpdatedDate { get; set; } = null;
         public DateTime? CompletedDate { get; set; } = null;
+        [JsonIgnore]
+        public virtual TodoList TodoList { get; set; }
     }
 }

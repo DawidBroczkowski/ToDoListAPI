@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessLibrary.Migrations
 {
     [DbContext(typeof(UsersContext))]
-    [Migration("20220903114000_MultipleListsAdded")]
-    partial class MultipleListsAdded
+    [Migration("20220907092828_Invites")]
+    partial class Invites
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,34 @@ namespace DataAccessLibrary.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("DataAccessLibrary.Models.Invite", b =>
+                {
+                    b.Property<Guid?>("InviteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("InviteDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvitingUsername")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid?>("ListId")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("InviteId");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.ToTable("Invites");
+                });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Task", b =>
                 {
@@ -51,7 +79,7 @@ namespace DataAccessLibrary.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("TodoListId")
+                    b.Property<Guid>("TodoListId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -80,12 +108,12 @@ namespace DataAccessLibrary.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("TodoLists");
                 });
@@ -108,6 +136,9 @@ namespace DataAccessLibrary.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varbinary(256)");
 
+                    b.Property<Guid?>("TodoListId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -115,31 +146,61 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TodoListId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DataAccessLibrary.Models.Invite", b =>
+                {
+                    b.HasOne("DataAccessLibrary.Models.User", "TargetUser")
+                        .WithMany("Invites")
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Task", b =>
                 {
-                    b.HasOne("DataAccessLibrary.Models.TodoList", null)
+                    b.HasOne("DataAccessLibrary.Models.TodoList", "TodoList")
                         .WithMany("TaskList")
+                        .HasForeignKey("TodoListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TodoList");
+                });
+
+            modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
+                {
+                    b.HasOne("DataAccessLibrary.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
+                {
+                    b.HasOne("DataAccessLibrary.Models.TodoList", null)
+                        .WithMany("Collaborators")
                         .HasForeignKey("TodoListId");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
                 {
-                    b.HasOne("DataAccessLibrary.Models.User", null)
-                        .WithMany("TodoLists")
-                        .HasForeignKey("UserId");
-                });
+                    b.Navigation("Collaborators");
 
-            modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
-                {
                     b.Navigation("TaskList");
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
                 {
-                    b.Navigation("TodoLists");
+                    b.Navigation("Invites");
                 });
 #pragma warning restore 612, 618
         }

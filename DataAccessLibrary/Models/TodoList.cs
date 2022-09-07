@@ -11,6 +11,11 @@ namespace DataAccessLibrary.Models
 {
     public record TodoList
     {
+        public TodoList()
+        {
+            TaskManager = new TaskManager(this);
+        }
+
         [Required]
         [Key]
         public Guid Id { get; set; }
@@ -20,6 +25,11 @@ namespace DataAccessLibrary.Models
         [Required]
         [MaxLength(1000)]
         public string? Description { get; set; }
-        public List<Models.Task> TaskList { get; set; }
+        public virtual List<Models.Task> TaskList { get; set; }
+        public virtual Models.User Owner { get; set; }
+        public virtual List<Models.Collab> Collaborators { get; set; }
+        [JsonIgnore]
+        [NotMapped]
+        public ITaskManager TaskManager { get; set; }
     }
 }

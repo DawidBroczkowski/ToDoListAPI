@@ -11,11 +11,11 @@ namespace ToDoList.Dtos
     public record UpdateTaskStatusDto
     {
         [Required]
-        public Guid ListId { get; set; }
+        public Guid? ListId { get; set; }
         [Required]
-        public Guid TaskId { get; set; }
+        public Guid? TaskId { get; set; }
         [Required]
         [Range(0,2)]
-        public Status Status { get; set; }
+        public Status? Status { get; set; }
     }
 }
