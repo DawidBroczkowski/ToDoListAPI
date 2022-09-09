@@ -30,7 +30,7 @@ namespace DataAccessLibrary.Models
         [MaxLength(500)]
         public string? Description { get; set; }
         [Required]
-        public Status Status { get; set; }
+        public Status? Status { get; set; }
         [Required]
         public DateTime CreatedDate { get; init; }
         public DateTime? StartedDate { get; set; } = null;

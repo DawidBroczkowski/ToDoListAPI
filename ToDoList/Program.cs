@@ -31,11 +31,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddDbContext<UsersContext>(options =>
+builder.Services.AddDbContext<ListContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
 }, contextLifetime: ServiceLifetime.Transient);
-builder.Services.AddTransient<IUserRepository, DbUserRepository>();
+builder.Services.AddTransient<IRepository, DbRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

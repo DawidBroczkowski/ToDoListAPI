@@ -5,14 +5,12 @@ namespace DataAccessLibrary
     public interface ITaskManager
     {
         void CreateNewTask(string name, string? description);
-        Models.Task? GetTask(Guid? id);
-        List<Models.Task>? GetTasks();
+        void DeleteAllTasks();
         bool TryCompleteTask(Guid? id);
-        bool TryDeleteAllTasks();
         bool TryDeleteTask(Guid? id);
         bool TryStartTask(Guid? id);
         bool TryUpdateTaskDescription(Guid? id, string descripiton);
         bool TryUpdateTaskName(Guid? id, string name);
-        bool TryUpdateTaskStatus(Guid? id, Status status);
+        bool TryUpdateTaskStatus(Guid? id, Status? status);
     }
 }

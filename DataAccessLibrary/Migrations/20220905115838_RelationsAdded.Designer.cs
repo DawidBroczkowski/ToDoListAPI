@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DataAccessLibrary.Migrations
 {
-    [DbContext(typeof(UsersContext))]
+    [DbContext(typeof(ListContext))]
     [Migration("20220905115838_RelationsAdded")]
     partial class RelationsAdded
     {

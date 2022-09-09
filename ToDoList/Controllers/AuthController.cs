@@ -16,14 +16,14 @@ namespace ToDoList.Controllers
     public class AuthController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly IUserRepository _userRepository;
+        private readonly IRepository _repository;
         private readonly AuthorizationManager _authorizationManager;
 
-        public AuthController(IConfiguration configuration, IUserRepository userRepository, UsersContext db)
+        public AuthController(IConfiguration configuration, IRepository userRepository, ListContext db)
         {
             _configuration = configuration;
-            _userRepository = userRepository;
-            _userRepository.SetContext(db);
+            _repository = userRepository;
+            _repository.SetContext(db);
             _authorizationManager = new(_configuration);
         }
 
@@ -31,21 +31,13 @@ namespace ToDoList.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto userDto)
         {
-            _authorizationManager.CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
-            User user = new()
-            {
-                Username = userDto.Username,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt
-            };
-
-            if (await _userRepository.TryCreateNewUserAsync(user) is false)
+            if (await _repository.GetUserAsync(userDto.Username) is not null)
             {
                 return BadRequest("Username already taken");
             }
-
-            await _userRepository.SaveListAsync();
+            _authorizationManager.CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            _repository.CreateNewUser(userDto.Username, passwordHash, passwordSalt);
+            await _repository.SaveListAsync();
             return Ok();
         }
 
@@ -53,7 +45,7 @@ namespace ToDoList.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto userDto)
         {
-            var user = await _userRepository.GetUserAsync(userDto.Username);
+            var user = await _repository.GetUserAsync(userDto.Username);
 
             if (user is null)
             {

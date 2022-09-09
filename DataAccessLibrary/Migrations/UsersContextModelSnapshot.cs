@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DataAccessLibrary.Migrations
 {
-    [DbContext(typeof(UsersContext))]
+    [DbContext(typeof(ListContext))]
     partial class UsersContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -40,7 +40,7 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Collabs");
+                    b.ToTable("Collabs", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Invite", b =>
@@ -68,7 +68,7 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasIndex("TargetUserId");
 
-                    b.ToTable("Invites");
+                    b.ToTable("Invites", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Task", b =>
@@ -108,7 +108,7 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasIndex("TodoListId");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.TodoList", b =>
@@ -134,7 +134,7 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("TodoLists");
+                    b.ToTable("TodoLists", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.User", b =>
@@ -162,7 +162,7 @@ namespace DataAccessLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLibrary.Models.Collab", b =>

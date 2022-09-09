@@ -19,17 +19,11 @@ namespace DataAccessLibrary
             _todoList = todoList;
         }
 
-        //public void CreateNewTodoList(string name, string? description)
-        //{
-        //    TodoList todoList = new()
-        //    {
-        //        Name = name,
-        //        Description = description,
-        //        TaskList = new()
-        //    };
-        //    _user.TodoLists.Add(todoList);
-        //}
-
+        /// <summary>
+        /// Adds a task to the task list.
+        /// </summary>
+        /// <param name="name">Name of the task.</param>
+        /// <param name="description">Description of the task</param>
         public void CreateNewTask(string name, string? description)
         {
             Models.Task task = new()
@@ -42,22 +36,39 @@ namespace DataAccessLibrary
             _todoList.TaskList.Add(task);
         }
 
+        /// <summary>
+        /// Updates the task's status to "started".
+        /// </summary>
+        /// <param name="id">Id of the task.</param>
+        /// <returns><see langword="true"/> if the update succeeded, <see langword="false"/> if a task was not found.</returns>
         public bool TryStartTask(Guid? id)
         {
             return TryUpdateTaskStatus(id, Status.Current);
         }
 
+        /// <summary>
+        /// Updates the task's status to "completed".
+        /// </summary>
+        /// <param name="id">Id of the task.</param>
+        /// <returns><see langword="true"/> if the update succeeded, <see langword="false"/> if task was not found.</returns>
         public bool TryCompleteTask(Guid? id)
         {
             return TryUpdateTaskStatus(id, Status.Completed);
         }
 
-        public bool TryDeleteAllTasks()
+        /// <summary>
+        /// Clears the task list.
+        /// </summary>
+        public void DeleteAllTasks()
         {
             _todoList.TaskList.Clear();
-            return true;
         }
 
+        /// <summary>
+        /// Deletes a task from the list.
+        /// </summary>
+        /// <param name="id">Id of the task.</param>
+        /// <returns><see langword="true"/> if the update succeeded, <see langword="false"/> if task was not found.</returns>
         public bool TryDeleteTask(Guid? id)
         {
             var task = _todoList.TaskList.FirstOrDefault(t => t.Id == id);
@@ -70,6 +81,12 @@ namespace DataAccessLibrary
             return true;
         }
 
+        /// <summary>
+        /// Updates the task's name.
+        /// </summary>
+        /// <param name="id">Id of the task.</param>
+        /// <param name="name">New name.</param>
+        /// <returns><see langword="true"/> if the update succeeded, <see langword="false"/> if task was not found.</returns>
         public bool TryUpdateTaskName(Guid? id, string name)
         {
             var task = _todoList.TaskList.FirstOrDefault(t => t.Id == id);
@@ -83,6 +100,12 @@ namespace DataAccessLibrary
             return true;
         }
 
+        /// <summary>
+        /// Updates the task's description.
+        /// </summary>
+        /// <param name="id">Id of the task.</param>
+        /// <param name="name">New description.</param>
+        /// <returns><see langword="true"/> if the update succeeded, <see langword="false"/> if task was not found.</returns>
         public bool TryUpdateTaskDescription(Guid? id, string descripiton)
         {
             var task = _todoList.TaskList.FirstOrDefault(t => t.Id == id);
@@ -96,7 +119,13 @@ namespace DataAccessLibrary
             return true;
         }
 
-        public bool TryUpdateTaskStatus(Guid? id, Status status)
+        /// <summary>
+        /// Updates the task status.
+        /// </summary>
+        /// <param name="id">Id of the task.</param>
+        /// <param name="status">New status.</param>
+        /// <returns><see langword="true"/> if the update succeeded, <see langword="false"/> if a task was not found.</returns>
+        public bool TryUpdateTaskStatus(Guid? id, Status? status)
         {
             var task = _todoList.TaskList.FirstOrDefault(t => t.Id == id);
             if (task is null)
@@ -137,16 +166,6 @@ namespace DataAccessLibrary
             task.UpdatedDate = DateTime.UtcNow;
             task.Status = status;
             return true;
-        }
-
-        public List<Models.Task>? GetTasks()
-        {
-            return _todoList.TaskList;
-        }
-
-        public Models.Task? GetTask(Guid? id)
-        {
-            return _todoList.TaskList.FirstOrDefault(t => t.Id == id);
         }
     }
 }

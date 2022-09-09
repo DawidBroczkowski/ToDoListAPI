@@ -8,41 +8,26 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.DataAccess.DbData
 {
-    public class DbUserRepository : IUserRepository
+    public class DbRepository : IRepository
     {
-        private UsersContext _db;
+        private ListContext _db;
 
-        /// <summary>
-        /// Injects the UsersContext.
-        /// </summary>
-        /// <param name="db">UsersContext injected in the controller.</param>
-        public void SetContext(UsersContext db)
+        public void SetContext(ListContext db)
         {
             _db = db;
         }
 
-        /// <summary>
-        /// Adds a new user to the database.
-        /// </summary>
-        /// <param name="user">User being added to the database.</param>
-        /// <returns></returns>
-        public async Task<bool> TryCreateNewUserAsync(Models.User user)
+        public void CreateNewUser(string username, byte[] passwordHash, byte[] passwordSalt)
         {
-            if (_db.Users.FirstOrDefault(x => x.Username == user.Username) is not null)
+            Models.User user = new()
             {
-                return false;
-            }
-
+                Username = username,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt
+            };
             _db.Users.Add(user);
-            _db.SaveChanges();
-            return true;
         }
 
-        /// <summary>
-        /// Gets an user from the database by username.
-        /// </summary>
-        /// <param name="username">Unique username.</param>
-        /// <returns>User with given username.</returns>
         public async Task<Models.User> GetUserAsync(string username)
         {
             var user = await _db.Users.IgnoreAutoIncludes().FirstOrDefaultAsync(u => u.Username == username);
@@ -53,7 +38,7 @@ namespace DataAccessLibrary.DataAccess.DbData
         {
             var todoList = await _db.TodoLists
                 .IgnoreAutoIncludes()
-                .Where(x => x.Collaborators.Any(x => x.User.Username == username) || x.Owner.Username == username)
+                .Where(x => x.Collaborations.Any(x => x.User.Username == username) || x.Owner.Username == username)
                 .FirstOrDefaultAsync(x => x.Id == listId);
             return todoList;
         }
@@ -63,7 +48,7 @@ namespace DataAccessLibrary.DataAccess.DbData
             var todoList = await _db.TodoLists
                 .IgnoreAutoIncludes()
                 .Include(x => x.TaskList)
-                .Where(x => x.Collaborators.Any(x => x.User.Username == username) || x.Owner.Username == username)
+                .Where(x => x.Collaborations.Any(x => x.User.Username == username) || x.Owner.Username == username)
                 .FirstOrDefaultAsync(x => x.Id == listId);
             return todoList;
         }
@@ -76,8 +61,12 @@ namespace DataAccessLibrary.DataAccess.DbData
 
         public async Task<List<Models.User>> GetTodoListCollaboratorsAsync(Guid? listId)
         {
-            var todoList = await _db.TodoLists.IgnoreAutoIncludes().Include(x => x.Collaborators).FirstOrDefaultAsync(x => x.Id == listId);
-            var users = todoList.Collaborators.Select(x => x.User).ToList();
+            var todoList = await _db.TodoLists
+                .IgnoreAutoIncludes()
+                .Include(x => x.Collaborations)
+                .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync(x => x.Id == listId);
+            var users = todoList.Collaborations.Select(x => x.User).ToList();
             return users;
         }
 
@@ -91,7 +80,7 @@ namespace DataAccessLibrary.DataAccess.DbData
         public async Task<List<Models.TodoList>> GetUserCollabTodoListsAsync(string username)
         {
             var user = await _db.Users.IgnoreAutoIncludes().FirstOrDefaultAsync(x => x.Username == username);
-            var todoLists = await _db.TodoLists.IgnoreAutoIncludes().Where(x => x.Collaborators.Any(x => x.User.Username == username)).ToListAsync();
+            var todoLists = await _db.TodoLists.IgnoreAutoIncludes().Where(x => x.Collaborations.Any(x => x.User.Username == username)).ToListAsync();
             return todoLists;
         }
 
@@ -107,7 +96,7 @@ namespace DataAccessLibrary.DataAccess.DbData
             var todoLists = await _db.TodoLists
                 .IgnoreAutoIncludes()
                 .Where(x => x.Id == listId)
-                .Where(x => x.Collaborators.Any(x => x.User.Username == username) || x.Owner.Username == username)   
+                .Where(x => x.Collaborations.Any(x => x.User.Username == username) || x.Owner.Username == username)   
                 .Include(x => x.TaskList.Where(x => x.Id == taskId))
                 .FirstOrDefaultAsync();
             return todoLists;
@@ -118,7 +107,7 @@ namespace DataAccessLibrary.DataAccess.DbData
             Models.TodoList todoList = new()
             {
                 Owner = await GetUserAsync(username),
-                Collaborators = new(),
+                Collaborations = new(),
                 Name = name,
                 Description = description
             };
@@ -126,7 +115,7 @@ namespace DataAccessLibrary.DataAccess.DbData
             await _db.TodoLists.AddAsync(todoList);
         }
 
-        public async Task RemoveTodoListAsync(Models.TodoList todoList)
+        public void RemoveTodoList(Models.TodoList todoList)
         {
             _db.TodoLists.Remove(todoList);
         }
@@ -151,6 +140,17 @@ namespace DataAccessLibrary.DataAccess.DbData
             return true;
         }
 
+        public async Task<bool> TryRemoveFromCollabAsync(string removedUsername, Guid? listId)
+        {
+            var collab = await _db.Collabs.IgnoreAutoIncludes().FirstOrDefaultAsync(x => x.TodoList.Id == listId && x.User.Username == removedUsername);
+            if (collab is null)
+            {
+                return false;
+            }
+            _db.Remove(collab);
+            return true;
+        }
+
         public async Task<bool> TryAcceptInvite(string username, Guid? inviteId)
         {
             var user = await _db.Users.Include(x => x.Invites.Where(x => x.InviteId == inviteId)).FirstOrDefaultAsync(x => x.Username == username);
@@ -159,67 +159,31 @@ namespace DataAccessLibrary.DataAccess.DbData
                 return false;
             }
             var todoList = await _db.TodoLists.FirstOrDefaultAsync(x => x.Id == user.Invites.First().ListId);
-            todoList.Collaborators = new();
+            todoList.Collaborations = new();
 
             Models.Collab collab = new();
             collab.TodoList = todoList;
             collab.User = user;
 
-            todoList.Collaborators.Add(collab);
+            todoList.Collaborations.Add(collab);
             user.Invites.RemoveAt(0);
             return true;
         }
-        
-        /// <summary>
-        /// Saves changes to the database.
-        /// </summary>
-        /// <param name="updatedUser">User that is being updated.</param>
-        /// <returns></returns>
-        public async Task UpdateUserAsync(Models.User updatedUser)
-        {
-            _db.Users.Update(updatedUser);
-        }
 
-        public void DeleteObject(object obj)
+        public async Task<bool> TryDeclineInvite(string username, Guid? inviteId)
         {
-            _db.Remove(obj);
+            var user = await _db.Users.Include(x => x.Invites.Where(x => x.InviteId == inviteId)).FirstOrDefaultAsync(x => x.Username == username);
+            if (user.Invites.FirstOrDefault() is null)
+            {
+                return false;
+            }
+            user.Invites.RemoveAt(0);
+            return true;
         }
 
         public async Task SaveListAsync()
         {
             await _db.SaveChangesAsync();
         }
-
-        /// <summary>
-        /// Loads users from json file to a list. Used to migrate from a Json repository to a Database repository.
-        /// </summary>
-        /// <returns></returns>
-        //private List<Models.User> LoadFromJson()
-        //{
-        //    var fileName = "Users.json";
-
-        //    if (!File.Exists(fileName))
-        //    {
-        //        File.Create(fileName);
-        //    }
-
-        //    if (new FileInfo(fileName).Length == 0)
-        //    {
-        //        return null;
-        //    }
-
-        //    string jsonString = File.ReadAllText("Users.json");
-        //    var users = JsonSerializer.Deserialize<List<Models.User>>(jsonString);
-
-        //    foreach (var user in users)
-        //    {
-        //        if (user.TodoLists is null)
-        //        {
-        //            user.TodoLists = new();
-        //        }
-        //    }
-
-        //    return users;
-        //}
     }
 }

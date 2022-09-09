@@ -27,7 +27,7 @@ namespace DataAccessLibrary.Models
         public string? Description { get; set; }
         public virtual List<Models.Task> TaskList { get; set; }
         public virtual Models.User Owner { get; set; }
-        public virtual List<Models.Collab> Collaborators { get; set; }
+        public virtual List<Models.Collab> Collaborations { get; set; }
         [JsonIgnore]
         [NotMapped]
         public ITaskManager TaskManager { get; set; }

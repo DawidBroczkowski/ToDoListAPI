@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.DataAccess
 {
-    public class UsersContext : DbContext
+    public class ListContext : DbContext
     {
-        public UsersContext(DbContextOptions options) : base(options) { }
+        public ListContext(DbContextOptions options) : base(options) { }
         public DbSet<Models.User> Users { get; set; }
         public DbSet<Models.Task> Tasks { get; set; }
         public DbSet<Models.TodoList> TodoLists { get; set; }
@@ -37,7 +37,7 @@ namespace DataAccessLibrary.DataAccess
                 .OnDelete(DeleteBehavior.NoAction);
             builder
                 .Entity<Models.TodoList>()
-                .HasMany(x => x.Collaborators)
+                .HasMany(x => x.Collaborations)
                 .WithOne(x => x.TodoList)
                 .OnDelete(DeleteBehavior.NoAction);
             builder
