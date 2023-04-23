@@ -1,13 +1,9 @@
 ﻿using DataAccessLibrary.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ToDoList.Dtos
 {
+#pragma warning disable CS8618
     public record UpdateTaskStatusDto
     {
         [Required]

@@ -11,6 +11,7 @@ namespace DataAccessLibrary.Models
 {
     public record TodoList
     {
+#pragma warning disable CS8618
         public TodoList()
         {
             TaskManager = new TaskManager(this);

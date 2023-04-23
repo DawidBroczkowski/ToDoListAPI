@@ -1,4 +1,4 @@
-﻿namespace DataAccessLibrary.DataAccess
+﻿namespace DataAccessLibrary.DataAccess.DbData
 {
     public interface IRepository
     {
@@ -8,50 +8,50 @@
         /// <param name="username">Calling user's username, used for authentication.</param>
         /// <param name="listId">ID of the todo list.</param>
         /// <returns>A todo list with the task list included.</returns>
-        Task<Models.TodoList> GetTodoListAndTaskListAsync(string username, Guid? listId);
+        Task<Models.TodoList?>? GetTodoListAndTaskListAsync(string username, Guid? listId);
         /// <summary>
         /// Gets a single todo list.
         /// </summary>
         /// <param name="username">Calling user's username, used for authentication.</param>
         /// <param name="listId">ID of the todo list.</param>
         /// <returns>A todo list.</returns>
-        Task<Models.TodoList> GetTodoListAsync(string username, Guid? listId);
+        Task<Models.TodoList?>? GetTodoListAsync(string username, Guid? listId);
         /// <summary>
         /// Gets a list of users permitted to use the todo list.
         /// </summary>
         /// <param name="listId">ID of the todo list.</param>
         /// <returns>A list of users permitted to use the todo list.</returns>
-        Task<List<Models.User>> GetTodoListCollaboratorsAsync(Guid? listId);
+        Task<List<Models.User?>?>? GetTodoListCollaboratorsAsync(Guid? listId);
         /// <summary>
         /// Gets the owner of a list.
         /// </summary>
         /// <param name="listId">ID of the todo list.</param>
         /// <returns>The user who owns the list.</returns>
-        Task<Models.User> GetTodoListOwnerAsync(Guid? listId);
+        Task<Models.User?>? GetTodoListOwnerAsync(Guid? listId);
         /// <summary>
         /// Gets an user.
         /// </summary>
         /// <param name="username">User's username</param>
         /// <returns>An user.</returns>
-        Task<Models.User> GetUserAsync(string username);
+        Task<Models.User?>? GetUserAsync(string username);
         /// <summary>
         /// Gets a list of todo lists, that the user is a collaborator in.
         /// </summary>
         /// <param name="username">User's username</param>
         /// <returns>A list of user's collab lists.</returns>
-        Task<List<Models.TodoList>> GetUserCollabTodoListsAsync(string username);
+        Task<List<Models.TodoList?>?>? GetUserCollabTodoListsAsync(string username);
         /// <summary>
         /// Gets a list of todo lists, that the user owns.
         /// </summary>
         /// <param name="username">User's username</param>
         /// <returns>A list of user's own todo lists.</returns>
-        Task<List<Models.TodoList>> GetUserOwnTodoListsAsync(string username);
+        Task<List<Models.TodoList?>?>? GetUserOwnTodoListsAsync(string username);
         /// <summary>
         /// Gets a list of invites addressed to the user.
         /// </summary>
         /// <param name="username">User's username</param>
         /// <returns>A list of invites.</returns>
-        Task<List<Models.Invite>> GetUserInvitesAsync(string username);
+        Task<List<Models.Invite?>?>? GetUserInvitesAsync(string username);
         /// <summary>
         /// Saves changes made in the repository.
         /// </summary>
@@ -118,6 +118,6 @@
         /// <param name="listId">ID of the todo list.</param>
         /// <param name="taskId">ID of the task.</param>
         /// <returns>A todo list with a single task.</returns>
-        Task<Models.TodoList> GetTodoListAndSingleTaskAsync(string username, Guid? listId, Guid? taskId);
+        Task<Models.TodoList?>? GetTodoListAndSingleTaskAsync(string username, Guid? listId, Guid? taskId);
     }
 }

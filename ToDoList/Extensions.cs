@@ -3,6 +3,7 @@ using ToDoList.Dtos;
 
 namespace ToDoList
 {
+#pragma warning disable CS8602, CS8601
     public static class Extensions
     {
         public static FullTaskDto AsDto(this DataAccessLibrary.Models.Task? task)

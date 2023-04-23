@@ -3,11 +3,7 @@ using ToDoList.Dtos;
 using DataAccessLibrary.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
+using DataAccessLibrary.DataAccess.DbData;
 
 namespace ToDoList.Controllers
 {
@@ -31,7 +27,7 @@ namespace ToDoList.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto userDto)
         {
-            if (await _repository.GetUserAsync(userDto.Username) is not null)
+            if (await _repository.GetUserAsync(userDto.Username)! is not null)
             {
                 return BadRequest("Username already taken");
             }
@@ -45,7 +41,7 @@ namespace ToDoList.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto userDto)
         {
-            var user = await _repository.GetUserAsync(userDto.Username);
+            var user = await _repository.GetUserAsync(userDto.Username)!;
 
             if (user is null)
             {

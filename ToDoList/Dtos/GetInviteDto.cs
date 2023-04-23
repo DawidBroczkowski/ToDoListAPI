@@ -4,6 +4,7 @@ namespace ToDoList.Dtos
 {
     public record GetInviteDto
     {
+#pragma warning disable CS8618
         [Required]
         public Guid? InviteId { get; set; }
         [Required]

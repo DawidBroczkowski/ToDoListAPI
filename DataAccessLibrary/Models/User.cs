@@ -13,6 +13,7 @@ namespace DataAccessLibrary.Models
 {
     public record User
     {
+#pragma warning disable CS8618
         public int Id { get; set; }
         [Required]
         [MaxLength(30)]

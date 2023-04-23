@@ -1,14 +1,10 @@
 ﻿using DataAccessLibrary.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ToDoList.Dtos
 {
     public record FullTaskDto
     {
+#pragma warning disable CS8618
         public Guid? Id { get; init; }
         public string? Name { get; set; }
         public string? Description { get; set; }

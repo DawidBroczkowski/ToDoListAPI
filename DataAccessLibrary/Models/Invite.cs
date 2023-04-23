@@ -10,6 +10,7 @@ namespace DataAccessLibrary.Models
 {
     public record Invite
     {
+#pragma warning disable CS8618
         [Key]
         [Required]
         public Guid? InviteId { get; set; }

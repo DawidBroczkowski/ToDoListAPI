@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ToDoList.Dtos
 {
     public record UserDto
     {
+#pragma warning disable CS8618
         [Required]
         [MinLength(4), MaxLength(20)]
         public string Username { get; set; } = string.Empty;

@@ -1,10 +1,7 @@
 using DataAccessLibrary.DataAccess;
 using DataAccessLibrary.DataAccess.DbData;
-using DataAccessLibrary.DataAccess.JsonData;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 
@@ -37,6 +34,12 @@ builder.Services.AddDbContext<ListContext>(options =>
 }, contextLifetime: ServiceLifetime.Transient);
 builder.Services.AddTransient<IRepository, DbRepository>();
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ListContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -6,6 +6,7 @@ namespace DataAccessLibrary.Models
 {
     public record Task
     {
+#pragma warning disable CS8618
         public Task()
         {
             CreatedDate = DateTime.UtcNow;
